@@ -1,0 +1,48 @@
+<?php
+session_start();
+
+// Connexion BD
+$host="localhost"; $user="root"; $pass="root"; $dbname="clientsdb";
+$conn=new mysqli($host,$user,$pass,$dbname);
+if($conn->connect_error) die("Erreur: ".$conn->connect_error);
+
+$email="";
+if(isset($_POST['email'])) $email=$_POST['email'];
+elseif(isset($_GET['email'])) $email=$_GET['email'];
+
+if(!empty($email)){
+    $stmt=$conn->prepare("SELECT * FROM clients WHERE email=?");
+    $stmt->bind_param("s",$email);
+    $stmt->execute();
+    $res=$stmt->get_result();
+
+    if($res->num_rows>0){
+        $user_data=$res->fetch_assoc();
+        $_SESSION['id']=$user_data['id'];
+        $_SESSION['nom']=$user_data['nom'];
+        $_SESSION['prenom']=$user_data['prenom'];
+        $_SESSION['email']=$user_data['email'];
+        header("Location: page5.php");
+        exit;
+    } else {
+        $msg="Vous n'êtes pas membre. Veuillez vous inscrire.";
+    }
+    $stmt->close();
+}
+$conn->close();
+?>
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><title>Vérification membre</title></head>
+<body>
+<h2>Vérifier si vous êtes membre</h2>
+<form method="POST">
+    <label>Email :</label><br>
+    <input type="email" name="email" required><br><br>
+    <button type="submit">Vérifier</button>
+</form>
+<br>
+<a href="page2.html"><button type="button">Aller à l'inscription</button></a>
+<?php if(isset($msg)) echo "<p style='color:red;'><strong>$msg</strong></p>"; ?>
+</body>
+</html>
